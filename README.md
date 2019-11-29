@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/somish/NexusMutual.svg?branch=master)](https://travis-ci.org/somish/NexusMutual?branch=master)
+[![Build Status](https://travis-ci.org/somish/NexusMutual.svg?branch=audit-april-2019)](https://travis-ci.org/somish/NexusMutual?branch=audit-april-2019)
+[![Coverage Status](https://coveralls.io/repos/github/somish/NexusMutual/badge.svg?audit-april-2019)](https://coveralls.io/github/somish/NexusMutual?branch=audit-april-2019)
 
 <h1><a id="NEXUS_MUTUAL_0"></a>NEXUS MUTUAL</h1>
 <p>Nexus Mutual uses blockchain technology to bring the mutual ethos back to insurance by creating aligned incentives through smart contract code on the Ethereum blockchain.</p>
@@ -118,7 +119,7 @@ calculateTokenPrice: Calculates the NXM Token Price of a currency.</li>
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
 
 ### Requirements
@@ -151,8 +152,8 @@ On Linux or Mac OS Systems, run the nxdev.sh file while in NexusMutual directory
 ```
 ./nxdev.sh
 ```
-  
-Then, you can deploy your Nexus Mutual dApp using the migrate script. 
+
+Then, you can deploy your Nexus Mutual dApp using the migrate script.
 ```
 truffle deploy
 ```
