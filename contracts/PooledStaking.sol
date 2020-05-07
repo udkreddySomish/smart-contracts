@@ -224,7 +224,7 @@ contract PooledStaking is MasterAware {
         return false;
     }
 
-    return deallocations[nextDeallocationIndex].deallocateAt > now;
+    return deallocations[nextDeallocationIndex].deallocateAt <= now;
   }
 
   function hasPendingRewards() public view returns (bool){
@@ -420,6 +420,8 @@ contract PooledStaking is MasterAware {
 
   function processPendingActions() public whenNotPaused {
 
+    let i = 0;
+
     while (true) {
 
       uint firstDeallocation = deallocations[0].next;
@@ -434,7 +436,7 @@ contract PooledStaking is MasterAware {
       Reward storage reward = rewards[firstReward];
 
       bool canBurn = burn.burnedAt > 0;
-      bool canDeallocate = deallocation.deallocateAt > 0;
+      bool canDeallocate = deallocation.deallocateAt > 0 ? (deallocation.deallocateAt <= now) : false;
       bool canReward = reward.rewardedAt > 0;
 
       if (

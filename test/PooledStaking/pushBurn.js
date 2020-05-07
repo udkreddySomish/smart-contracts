@@ -1,4 +1,4 @@
-const { ether, expectRevert } = require('@openzeppelin/test-helpers');
+const { ether, expectRevert, time } = require('@openzeppelin/test-helpers');
 const { assert } = require('chai');
 
 const accounts = require('../utils/accounts');
@@ -17,7 +17,10 @@ const firstContract = '0x0000000000000000000000000000000000000001';
 
 async function fundAndStake (token, staking, amount, contract, member) {
   const maxLeverage = '2';
+  const lockTime = 90 * 24 * 3600; // 90 days
+
   await staking.updateParameter(ParamType.MAX_LEVERAGE, maxLeverage, { from: governanceContract });
+  await staking.updateParameter(ParamType.DEALLOCATE_LOCK_TIME, lockTime, { from: governanceContract });
 
   await token.transfer(member, amount); // fund member account from default address
   await token.approve(staking.address, amount, { from: member });
@@ -26,7 +29,7 @@ async function fundAndStake (token, staking, amount, contract, member) {
 
 }
 
-describe('pushBurn', function () {
+describe.only('pushBurn', function () {
 
   beforeEach(setup);
 
@@ -49,32 +52,44 @@ describe('pushBurn', function () {
     // Fund account and stake 10
     await fundAndStake(token, staking, ether('10'), firstContract, memberOne);
 
-    // First Burn
+    // Push a burn
     await staking.pushBurn(firstContract, ether('5'), { from: internalContract });
     const { amount: firstAmount, contractAddress: firstAddress } = await staking.burns(1);
     assert(firstAmount.eq(ether('5')), `Expected burned contract to be ${ether('5')}, found ${firstAmount}`);
     assert(firstAddress === firstContract, `Expected burned contract to be ${firstContract}, found ${firstAddress}`);
 
+    // Expect to revert if there is a pending burn
     await expectRevert(
       staking.pushBurn(firstContract, ether('1'), { from: internalContract }),
       'Unable to execute request with unprocessed burns',
     );
   });
 
-  it('should revert when called with pending deallocations', async function () {
+  it.only('should revert when called with pending deallocations', async function () {
 
     const { token, staking } = this;
 
-    // Fund account and stake
+    // Fund account and stake; DEALLOCATE_LOCK_TIME = 90 days
     await fundAndStake(token, staking, ether('10'), firstContract, memberOne);
 
     // Request Deallocation
-    await staking.requestDeallocation([firstContract], [ether('5')], 0, { from: memberOne });
+    await staking.requestDeallocation([firstContract], [ether('3')], 0, { from: memberOne });
 
-    await expectRevert(
-      staking.pushBurn(firstContract, ether('1'), { from: internalContract }),
-      'Unable to execute request with unprocessed deallocations',
-    );
+    time.increase((3600));  // 1h
+
+    // Should be able to push burn as no deallocations are due yet
+    await staking.pushBurn(firstContract, ether('1'), { from: internalContract });
+
+    // Process all due pending actions
+    await staking.processPendingActions();
+
+    // // 91 days pass
+    // await time.increase(91 * 24 * 3600);
+    //
+    // await expectRevert(
+    //   staking.pushBurn(firstContract, ether('2'), { from: internalContract }),
+    //   'Unable to execute request with unprocessed deallocations',
+    // );
   });
 
   it('should revert when burn amount exceeds total amount staked on contract', async function () {
