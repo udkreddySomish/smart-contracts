@@ -21,6 +21,9 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./abstract/MasterAware.sol";
 import "./abstract/NXMToken.sol";
 import "./interfaces/ITokenController.sol";
+import "./interfaces/ITokenData.sol";
+import "./interfaces/IMemberRoles.sol";
+import "./interfaces/ITokenFunctions.sol";
 
 contract PooledStaking is MasterAware {
   using SafeMath for uint;
@@ -737,6 +740,78 @@ contract PooledStaking is MasterAware {
     REWARD_CYCLE_GAS_LIMIT = 45000;
 
     // TODO: implement staking migration here
+    migrateStakers();
+  }
+
+  function migrateStakers() internal {
+
+    IMemberRoles memberRoles = IMemberRoles(master.getLatestAddress("MR"));
+    ITokenFunctions tokenFunctions = ITokenFunctions(master.getLatestAddress("TF"));
+    ITokenData tokenData = ITokenData(master.getLatestAddress("TD"));
+
+    address[] memory members;
+    ( , members) = memberRoles.members(2);
+    for (uint i = 0; i < members.length; i++) {
+      address member = members[i];
+      uint stakerLockedTokens = tokenFunctions.getStakerAllLockedTokens(member);
+
+      if (stakerLockedTokens > 0) {
+        tokenController.mint(address(this), stakerLockedTokens);
+
+        uint stakedContractsCount = tokenData.getStakerStakedContractLength(member);
+        uint[] memory stakedAllocations = new uint[](stakedContractsCount);
+        address[] memory stakedAddresses = new address[](stakedContractsCount);
+
+        for (uint j = 0; j < stakedContractsCount; j++) {
+          uint scIndex;
+          stakedAddresses[i] = tokenData.getStakerStakedContractByIndex(member, i);
+          scIndex = tokenData.getStakerStakedContractIndex(member, i);
+          uint stakedAmount;
+          (, stakedAmount) = tokenFunctions._unlockableBeforeBurningAndCanBurn(member, stakedAddresses[i], i);
+          stakedAllocations[i] = stakedAmount;
+
+          tokenData.pushBurnedTokens(member, i, stakedAmount);
+          bytes32 reason = keccak256(abi.encodePacked("UW", member, stakedAddresses[i], scIndex));
+          tokenController.burnLockedTokens(member, reason, stakedAmount);
+        }
+
+        this.stake(stakerLockedTokens, stakedAddresses, stakedAllocations);
+      }
+    }
+//    require(!sd.userMigrated(_ra));
+//    claimAllCommissionAndUnlockable(_ra, 10);
+
+//    uint snxm = tf.getStakerAllLockedTokens(_ra);
+//    if (snxm > 0) {
+//
+//      tc.mint(_ra, snxm);
+//      tf.increaseStake(_ra, snxm);
+//      uint stakedLen = td.getStakerStakedContractLength(_ra);
+//      uint[] memory stakedAllocations = new uint[](stakedLen);
+//      address[] memory stakedAddresses = new address[](stakedLen);
+//      uint i;
+//      for (i = 0; i < stakedLen; i++) {
+//        uint scIndex;
+//        stakedAddresses[i] = td.getStakerStakedContractByIndex(_ra, i);
+//        scIndex = td.getStakerStakedContractIndex(_ra, i);
+//        uint stakedAmount;
+//        (, stakedAmount) = tf._unlockableBeforeBurningAndCanBurn(_ra, stakedAddresses[i], i);
+//        stakedAllocations[i] = stakedAmount.mul(10000).div(snxm);
+//        if (stakedAllocations[i] > 1000) {
+//          stakedAllocations[i] = 1000;
+//        }
+//        if (stakedAllocations[i] < 200) {
+//          stakedAllocations[i] = 0;
+//        }
+//        td.pushBurnedTokens(_ra, i, stakedAmount);
+//        bytes32 reason = keccak256(abi.encodePacked("UW", _ra,
+//          stakedAddresses[i], scIndex));
+//        tc.burnLockedTokens(_ra, reason, stakedAmount);
+//      }
+//      tf.increaseAllocation(_ra, stakedAddresses, stakedAllocations);
+//    }
+//    sd.setUserMigrated(_ra);
+//    sd.callEvent(_ra, address(0), 0, 2);
   }
 
   function changeDependentContractAddress() public {

@@ -15,10 +15,7 @@
 
 pragma solidity ^0.5.7;
 
-interface ITokenController {
+interface IMemberRoles {
 
-  function mint(address _member, uint256 _amount) external;
-  function addToWhitelist(address _member) external;
-
-  function burnLockedTokens(address _of, bytes32 _reason, uint256 _amount) external;
+    function members(uint _memberRoleId) external view returns(uint, address[] memory memberArray);
 }

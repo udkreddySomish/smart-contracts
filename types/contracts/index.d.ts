@@ -21,6 +21,11 @@ export interface IMasterAwareContract
   "new"(meta?: Truffle.TransactionDetails): Promise<IMasterAwareInstance>;
 }
 
+export interface IMemberRolesContract
+  extends Truffle.Contract<IMemberRolesInstance> {
+  "new"(meta?: Truffle.TransactionDetails): Promise<IMemberRolesInstance>;
+}
+
 export interface INXMMasterContract
   extends Truffle.Contract<INXMMasterInstance> {
   "new"(meta?: Truffle.TransactionDetails): Promise<INXMMasterInstance>;
@@ -29,6 +34,16 @@ export interface INXMMasterContract
 export interface ITokenControllerContract
   extends Truffle.Contract<ITokenControllerInstance> {
   "new"(meta?: Truffle.TransactionDetails): Promise<ITokenControllerInstance>;
+}
+
+export interface ITokenDataContract
+  extends Truffle.Contract<ITokenDataInstance> {
+  "new"(meta?: Truffle.TransactionDetails): Promise<ITokenDataInstance>;
+}
+
+export interface ITokenFunctionsContract
+  extends Truffle.Contract<ITokenFunctionsInstance> {
+  "new"(meta?: Truffle.TransactionDetails): Promise<ITokenFunctionsInstance>;
 }
 
 export interface MasterAwareContract
@@ -315,6 +330,13 @@ export interface IMasterAwareInstance extends Truffle.ContractInstance {
   };
 }
 
+export interface IMemberRolesInstance extends Truffle.ContractInstance {
+  members(
+    _memberRoleId: number | BigNumber | string,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<[BigNumber, string[]]>;
+}
+
 export interface INXMMasterInstance extends Truffle.ContractInstance {
   getLatestAddress(
     _contractName: string | BigNumber,
@@ -413,6 +435,33 @@ export interface ITokenControllerInstance extends Truffle.ContractInstance {
     ): Promise<number>;
   };
 
+  burnLockedTokens: {
+    (
+      _of: string | BigNumber,
+      _reason: string | BigNumber,
+      _amount: number | BigNumber | string,
+      txDetails?: Truffle.TransactionDetails
+    ): Promise<Truffle.TransactionResponse>;
+    call(
+      _of: string | BigNumber,
+      _reason: string | BigNumber,
+      _amount: number | BigNumber | string,
+      txDetails?: Truffle.TransactionDetails
+    ): Promise<void>;
+    sendTransaction(
+      _of: string | BigNumber,
+      _reason: string | BigNumber,
+      _amount: number | BigNumber | string,
+      txDetails?: Truffle.TransactionDetails
+    ): Promise<string>;
+    estimateGas(
+      _of: string | BigNumber,
+      _reason: string | BigNumber,
+      _amount: number | BigNumber | string,
+      txDetails?: Truffle.TransactionDetails
+    ): Promise<number>;
+  };
+
   addToWhitelist: {
     (
       _member: string | BigNumber,
@@ -431,6 +480,71 @@ export interface ITokenControllerInstance extends Truffle.ContractInstance {
       txDetails?: Truffle.TransactionDetails
     ): Promise<number>;
   };
+}
+
+export interface ITokenDataInstance extends Truffle.ContractInstance {
+  pushBurnedTokens: {
+    (
+      _stakerAddress: string | BigNumber,
+      _stakerIndex: number | BigNumber | string,
+      _amount: number | BigNumber | string,
+      txDetails?: Truffle.TransactionDetails
+    ): Promise<Truffle.TransactionResponse>;
+    call(
+      _stakerAddress: string | BigNumber,
+      _stakerIndex: number | BigNumber | string,
+      _amount: number | BigNumber | string,
+      txDetails?: Truffle.TransactionDetails
+    ): Promise<void>;
+    sendTransaction(
+      _stakerAddress: string | BigNumber,
+      _stakerIndex: number | BigNumber | string,
+      _amount: number | BigNumber | string,
+      txDetails?: Truffle.TransactionDetails
+    ): Promise<string>;
+    estimateGas(
+      _stakerAddress: string | BigNumber,
+      _stakerIndex: number | BigNumber | string,
+      _amount: number | BigNumber | string,
+      txDetails?: Truffle.TransactionDetails
+    ): Promise<number>;
+  };
+
+  members(
+    _memberRoleId: number | BigNumber | string,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<[BigNumber, string[]]>;
+
+  getStakerStakedContractIndex(
+    _stakerAddress: string | BigNumber,
+    _stakerIndex: number | BigNumber | string,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<BigNumber>;
+
+  getStakerStakedContractByIndex(
+    _stakerAddress: string | BigNumber,
+    _stakerIndex: number | BigNumber | string,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<string>;
+
+  getStakerStakedContractLength(
+    _stakerAddress: string | BigNumber,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<BigNumber>;
+}
+
+export interface ITokenFunctionsInstance extends Truffle.ContractInstance {
+  getStakerAllLockedTokens(
+    _stakerAddress: string | BigNumber,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<BigNumber>;
+
+  _unlockableBeforeBurningAndCanBurn(
+    stakerAdd: string | BigNumber,
+    stakedAdd: string | BigNumber,
+    stakerIndex: number | BigNumber | string,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<[BigNumber, BigNumber]>;
 }
 
 export interface MasterAwareInstance extends Truffle.ContractInstance {
@@ -1206,6 +1320,33 @@ export interface TokenControllerMockInstance extends Truffle.ContractInstance {
     ): Promise<string>;
     estimateGas(
       _member: string | BigNumber,
+      _amount: number | BigNumber | string,
+      txDetails?: Truffle.TransactionDetails
+    ): Promise<number>;
+  };
+
+  burnLockedTokens: {
+    (
+      _of: string | BigNumber,
+      _reason: string | BigNumber,
+      _amount: number | BigNumber | string,
+      txDetails?: Truffle.TransactionDetails
+    ): Promise<Truffle.TransactionResponse>;
+    call(
+      _of: string | BigNumber,
+      _reason: string | BigNumber,
+      _amount: number | BigNumber | string,
+      txDetails?: Truffle.TransactionDetails
+    ): Promise<void>;
+    sendTransaction(
+      _of: string | BigNumber,
+      _reason: string | BigNumber,
+      _amount: number | BigNumber | string,
+      txDetails?: Truffle.TransactionDetails
+    ): Promise<string>;
+    estimateGas(
+      _of: string | BigNumber,
+      _reason: string | BigNumber,
       _amount: number | BigNumber | string,
       txDetails?: Truffle.TransactionDetails
     ): Promise<number>;
