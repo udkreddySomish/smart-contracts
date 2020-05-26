@@ -778,40 +778,6 @@ contract PooledStaking is MasterAware {
         this.stake(stakerLockedTokens, stakedAddresses, stakedAllocations);
       }
     }
-//    require(!sd.userMigrated(_ra));
-//    claimAllCommissionAndUnlockable(_ra, 10);
-
-//    uint snxm = tf.getStakerAllLockedTokens(_ra);
-//    if (snxm > 0) {
-//
-//      tc.mint(_ra, snxm);
-//      tf.increaseStake(_ra, snxm);
-//      uint stakedLen = td.getStakerStakedContractLength(_ra);
-//      uint[] memory stakedAllocations = new uint[](stakedLen);
-//      address[] memory stakedAddresses = new address[](stakedLen);
-//      uint i;
-//      for (i = 0; i < stakedLen; i++) {
-//        uint scIndex;
-//        stakedAddresses[i] = td.getStakerStakedContractByIndex(_ra, i);
-//        scIndex = td.getStakerStakedContractIndex(_ra, i);
-//        uint stakedAmount;
-//        (, stakedAmount) = tf._unlockableBeforeBurningAndCanBurn(_ra, stakedAddresses[i], i);
-//        stakedAllocations[i] = stakedAmount.mul(10000).div(snxm);
-//        if (stakedAllocations[i] > 1000) {
-//          stakedAllocations[i] = 1000;
-//        }
-//        if (stakedAllocations[i] < 200) {
-//          stakedAllocations[i] = 0;
-//        }
-//        td.pushBurnedTokens(_ra, i, stakedAmount);
-//        bytes32 reason = keccak256(abi.encodePacked("UW", _ra,
-//          stakedAddresses[i], scIndex));
-//        tc.burnLockedTokens(_ra, reason, stakedAmount);
-//      }
-//      tf.increaseAllocation(_ra, stakedAddresses, stakedAllocations);
-//    }
-//    sd.setUserMigrated(_ra);
-//    sd.callEvent(_ra, address(0), 0, 2);
   }
 
   function changeDependentContractAddress() public {
