@@ -297,6 +297,28 @@ contract PooledStaking is MasterAware {
     );
 
     token.transferFrom(msg.sender, address(this), amount);
+    stakeForMember(msg.sender, amount, _contracts, _allocations, true);
+  }
+
+  function stakeForMember(
+    address member,
+    uint amount,
+    address[] memory _contracts,
+    uint[] memory _allocations,
+    bool checkMinAllocations
+  ) internal whenNotPaused onlyMember noPendingActions {
+
+    Staker storage staker = stakers[member];
+    require(
+      _contracts.length >= staker.contracts.length,
+      "Allocating to fewer contracts is not allowed"
+    );
+
+    require(
+      _contracts.length == _allocations.length,
+      "Contracts and allocations arrays should have the same length"
+    );
+
     staker.staked = staker.staked.add(amount);
 
     uint oldLength = staker.contracts.length;
@@ -314,7 +336,9 @@ contract PooledStaking is MasterAware {
       uint newAllocation = _allocations[i];
       bool isNewAllocation = i >= oldLength;
 
-      require(newAllocation >= MIN_ALLOCATION, "Allocation minimum not met");
+      if (checkMinAllocations) {
+        require(newAllocation >= MIN_ALLOCATION, "Allocation minimum not met");
+      }
       require(newAllocation <= staker.staked, "Cannot allocate more than staked");
 
       if (!isNewAllocation) {
@@ -329,7 +353,7 @@ contract PooledStaking is MasterAware {
 
       if (isNewAllocation) {
         staker.contracts.push(contractAddress);
-        contracts[contractAddress].stakers.push(msg.sender);
+        contracts[contractAddress].stakers.push(member);
       }
 
       totalAllocation = totalAllocation.add(newAllocation);
@@ -338,7 +362,7 @@ contract PooledStaking is MasterAware {
       staker.allocations[contractAddress] = newAllocation;
       contracts[contractAddress].staked = contracts[contractAddress].staked.add(increase);
 
-      emit Allocated(contractAddress, msg.sender, increase);
+      emit Allocated(contractAddress, member, increase);
     }
 
     require(
@@ -346,7 +370,7 @@ contract PooledStaking is MasterAware {
       "Total allocation exceeds maximum allowed"
     );
 
-    emit Staked(msg.sender, amount);
+    emit Staked(member, amount);
   }
 
   function unstake(uint amount) external whenNotPaused onlyMember noPendingBurns {
@@ -775,7 +799,7 @@ contract PooledStaking is MasterAware {
           tokenController.burnLockedTokens(member, reason, stakedAmount);
         }
 
-        this.stake(stakerLockedTokens, stakedAddresses, stakedAllocations);
+        stakeForMember(member, stakerLockedTokens, stakedAddresses, stakedAllocations, false);
       }
     }
   }
