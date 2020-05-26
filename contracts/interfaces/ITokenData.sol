@@ -14,6 +14,7 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 pragma solidity ^0.5.7;
+pragma experimental ABIEncoderV2;
 
 interface ITokenData {
 
@@ -47,4 +48,17 @@ interface ITokenData {
         uint _stakerIndex,
         uint _amount
     ) external;
+
+    struct Stake {
+        address stakedContractAddress;
+        uint stakedContractIndex;
+        uint dateAdd;
+        uint stakeAmount;
+        uint unlockedAmount;
+        uint burnedAmount;
+        uint unLockableBeforeLastBurn;
+    }
+
+    function scValidDays() external returns (uint);
+    function stakerStakedContracts(address staker, uint index) external returns (Stake memory);
 }
