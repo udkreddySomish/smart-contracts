@@ -21,6 +21,9 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./abstract/MasterAware.sol";
 import "./abstract/NXMToken.sol";
 import "./interfaces/ITokenController.sol";
+import "./interfaces/IMemberRoles.sol";
+import "./interfaces/ITokenFunctions.sol";
+import "./interfaces/ITokenData.sol";
 
 contract PooledStaking is MasterAware {
   using SafeMath for uint;
@@ -869,8 +872,81 @@ contract PooledStaking is MasterAware {
     MIN_DEALLOCATION = 20 ether;
     MAX_LEVERAGE = 10;
     DEALLOCATE_LOCK_TIME = 90 days;
+    // TODO: To be estimated
+    // BURN_CYCLE_GAS_LIMIT = 0;
+    // DEALLOCATION_CYCLE_GAS_LIMIT = 0;
+    REWARD_CYCLE_GAS_LIMIT = 45000;
 
-    // TODO: implement staking migration here
+    migrateStakers();
+  }
+
+  function migrateStakers() internal {
+
+    IMemberRoles memberRoles = IMemberRoles(master.getLatestAddress("MR"));
+    ITokenFunctions tokenFunctions = ITokenFunctions(master.getLatestAddress("TF"));
+    ITokenData tokenData = ITokenData(master.getLatestAddress("TD"));
+
+    address[] memory members;
+    ( , members) = memberRoles.members(2);
+    for (uint i = 0; i < members.length; i++) {
+      address member = members[i];
+      uint stakerLockedTokens = tokenFunctions.getStakerAllLockedTokens(member);
+
+      if (stakerLockedTokens > 0) {
+        tokenController.mint(address(this), stakerLockedTokens);
+
+        uint stakedContractsCount = tokenData.getStakerStakedContractLength(member);
+        uint[] memory stakedAllocations = new uint[](stakedContractsCount);
+        address[] memory stakedAddresses = new address[](stakedContractsCount);
+
+        for (uint j = 0; j < stakedContractsCount; j++) {
+          uint scIndex;
+          stakedAddresses[i] = tokenData.getStakerStakedContractByIndex(member, i);
+          scIndex = tokenData.getStakerStakedContractIndex(member, i);
+          uint stakedAmount;
+          (, stakedAmount) = tokenFunctions._unlockableBeforeBurningAndCanBurn(member, stakedAddresses[i], i);
+          stakedAllocations[i] = stakedAmount;
+
+          tokenData.pushBurnedTokens(member, i, stakedAmount);
+          bytes32 reason = keccak256(abi.encodePacked("UW", member, stakedAddresses[i], scIndex));
+          tokenController.burnLockedTokens(member, reason, stakedAmount);
+        }
+
+        stakeForMember(member, stakerLockedTokens, stakedAddresses, stakedAllocations);
+      }
+    }
+  }
+
+  function stakeForMember(address member,
+    uint amount,
+    address[] memory _contracts,
+    uint[] memory _allocations
+  ) internal whenNotPaused noPendingActions {
+    Staker storage staker = stakers[member];
+    require(
+      _contracts.length == _allocations.length,
+      "Contracts and allocations arrays should have the same length"
+    );
+
+    uint totalAllocation;
+    staker.staked = amount;
+
+    for (uint i = 0; i < _contracts.length; i++) {
+      address contractAddress = _contracts[i];
+
+      require(_allocations[i] <= amount, "Cannot allocate more than staked");
+      staker.allocations[contractAddress] = _allocations[i];
+      totalAllocation = _allocations[i];
+
+      emit Allocated(contractAddress, member, _allocations[i]);
+    }
+
+    require(
+      totalAllocation <= staker.staked.mul(MAX_LEVERAGE),
+      "Total allocation exceeds maximum allowed"
+    );
+
+    emit Staked(member, amount);
   }
 
   function changeDependentContractAddress() public {
