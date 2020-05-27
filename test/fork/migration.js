@@ -113,6 +113,11 @@ describe('migration', function () {
 
     await submitGovernanceProposal( masterAddressChangeCategoryId, actionHash, boardMembers, gv, '1', firstBoardMember);
     console.log(`Successfully submitted proposal and passed.`);
+
+    this.master = newMaster;
+    this.mr = mr;
+    this.gv = gv;
+    this.tk = tk;
   });
 
   it('migrates all data from old pooled staking system to new one', async function () {
