@@ -135,7 +135,7 @@ describe('migration', function () {
     assert.equal(pooledStakingIsInternal, true);
 
     console.log('Setting master address for pooled staking.')
-    await ps.changeMasterAddress(newMaster);
+    await ps.changeMasterAddress(newMaster.address);
     console.log('Pooled staking is set up correctly. Initializing and migrating..');
 
     this.master = newMaster;
