@@ -10,6 +10,7 @@ const MemberRoles = contract.fromArtifact('MemberRoles');
 const NXMasterNew = contract.fromArtifact('NXMasterMock');
 const NXMToken = contract.fromArtifact('NXMToken');
 const Governance = contract.fromArtifact('Governance');
+const PooledStaking = contract.fromArtifact('PooledStaking');
 
 
 const hex = string => '0x' + Buffer.from(string).toString('hex');
@@ -23,6 +24,13 @@ function getWeb3Contract(name, versionData, web3) {
 
 function getContractData(name, versionData) {
   return versionData.mainnet.abis.filter(abi => abi.code === name)[0];
+}
+
+function getUpgradeAddressesArray(versions) {
+  const codes = ['QD', 'TD', 'CD', 'PD', 'QT', 'TF', 'TC', 'CL', 'CR', 'P1', 'P2', 'MC', 'GV', 'PC', 'MR'];
+
+  const addresses = codes.map(code => versions.mainnet.abis.filter(abi => abi.code === code)[0].address);
+  return addresses;
 }
 
 async function submitGovernanceProposal(categoryId, actionHash, members, gv, memberType, submitter) {
@@ -95,7 +103,6 @@ describe('migration', function () {
       });
     }
 
-
     assert.equal(boardMembers.length, 5);
 
     const newMaster = await NXMasterNew.new(tk.address, {
@@ -114,13 +121,30 @@ describe('migration', function () {
     await submitGovernanceProposal( masterAddressChangeCategoryId, actionHash, boardMembers, gv, '1', firstBoardMember);
     console.log(`Successfully submitted proposal and passed.`);
 
+    console.log(`Deploying pooled staking..`);
+    const ps = await PooledStaking.new({
+      from: firstBoardMember
+    });
+
+    console.log(`Injecting the PooledStaking in the new master...`);
+    await master.setLatestAddress(hex('PS'), ps.address);
+
+    const currentPooledStakingAddress = await master.getLatestAddress(hex('PS'));
+    assert.equal(currentPooledStakingAddress, ps.address);
+    const pooledStakingIsInternal = await master.isInternal(hex('PS'));
+    assert.equal(pooledStakingIsInternal, true);
+    console.log('Pooled staking is set up correctly. Initializing and migrating..');
+
     this.master = newMaster;
     this.mr = mr;
     this.gv = gv;
     this.tk = tk;
+    this.ps = ps;
   });
 
   it('migrates all data from old pooled staking system to new one', async function () {
+    const { ps } = this;
 
+    await ps.changeDependentContractAddress();
   });
 })
