@@ -14,7 +14,6 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 pragma solidity ^0.5.17;
-pragma experimental ABIEncoderV2;
 
 interface ITokenData {
 
@@ -59,6 +58,25 @@ interface ITokenData {
         uint unLockableBeforeLastBurn;
     }
 
-    function scValidDays() external returns (uint);
-    function stakerStakedContracts(address staker, uint index) external returns (Stake memory);
+    function scValidDays() external view returns (uint);
+    function stakerStakedContracts(
+        address staker,
+        uint index)
+    external
+    view
+    returns (address,uint256,uint256,uint256, uint256,uint256,uint256);
+
+    /**
+     * @dev to get the staker's unlocked tokens which were staked
+     * @param _stakerAddress is the address of the staker
+     * @param _stakerIndex is the index of staker
+     * @return amount
+     */
+    function getStakerUnlockedStakedTokens(
+        address _stakerAddress,
+        uint _stakerIndex
+    )
+    external
+    view
+    returns (uint amount);
 }
