@@ -1,3 +1,4 @@
+
 /* Copyright (C) 2020 NexusMutual.io
 
   This program is free software: you can redistribute it and/or modify
@@ -13,20 +14,10 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity ^0.5.17;
+pragma solidity ^0.5.7;
+pragma experimental ABIEncoderV2;
 
-interface ITokenFunctions {
+interface IClaimsReward {
 
-    function getStakerAllLockedTokens(address stakerAddress) external view returns (uint amount);
-    function _unlockableBeforeBurningAndCanBurn(
-        address stakerAdd,
-        address stakedAdd,
-        uint stakerIndex
-    )
-    external
-    view
-    returns
-    (uint amount, uint canBurn);
-
-    function unlockStakerUnlockableTokens(address stakerAddress) external;
+  function _claimStakeCommission(uint _records, address _user) external;
 }

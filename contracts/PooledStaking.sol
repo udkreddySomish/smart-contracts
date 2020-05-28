@@ -24,6 +24,7 @@ import "./interfaces/ITokenController.sol";
 import "./interfaces/IMemberRoles.sol";
 import "./interfaces/ITokenFunctions.sol";
 import "./interfaces/ITokenData.sol";
+import "./interfaces/IClaimsReward.sol";
 
 contract PooledStaking is MasterAware {
   using SafeMath for uint;
@@ -885,11 +886,16 @@ contract PooledStaking is MasterAware {
     IMemberRoles memberRoles = IMemberRoles(master.getLatestAddress("MR"));
     ITokenFunctions tokenFunctions = ITokenFunctions(master.getLatestAddress("TF"));
     ITokenData tokenData = ITokenData(master.getLatestAddress("TD"));
+    IClaimsReward claimsReward = IClaimsReward(master.getLatestAddress("CR"));
 
     address[] memory members;
     ( , members) = memberRoles.members(2);
     for (uint i = 0; i < members.length; i++) {
       address member = members[i];
+
+      uint recordsToProcess = 10;
+      claimsReward._claimStakeCommission(recordsToProcess, member);
+      tokenFunctions.unlockStakerUnlockableTokens(member);
       uint stakerLockedTokens = tokenFunctions.getStakerAllLockedTokens(member);
 
       if (stakerLockedTokens > 0) {
@@ -900,15 +906,15 @@ contract PooledStaking is MasterAware {
         address[] memory stakedAddresses = new address[](stakedContractsCount);
 
         for (uint j = 0; j < stakedContractsCount; j++) {
-          uint scIndex;
+          uint stakerContractIndex;
           stakedAddresses[i] = tokenData.getStakerStakedContractByIndex(member, i);
-          scIndex = tokenData.getStakerStakedContractIndex(member, i);
+          stakerContractIndex = tokenData.getStakerStakedContractIndex(member, i);
           uint stakedAmount;
           (, stakedAmount) = tokenFunctions._unlockableBeforeBurningAndCanBurn(member, stakedAddresses[i], i);
           stakedAllocations[i] = stakedAmount;
 
           tokenData.pushBurnedTokens(member, i, stakedAmount);
-          bytes32 reason = keccak256(abi.encodePacked("UW", member, stakedAddresses[i], scIndex));
+          bytes32 reason = keccak256(abi.encodePacked("UW", member, stakedAddresses[i], stakerContractIndex));
           tokenController.burnLockedTokens(member, reason, stakedAmount);
         }
 
@@ -954,6 +960,12 @@ contract PooledStaking is MasterAware {
     tokenController = ITokenController(master.getLatestAddress("TC"));
     initialize();
   }
+
+
+  /*
+    Code below is copied from TokenFunctions.sol in order to be
+    able to read the data even though functions are private.
+  */
 
   /**
  * @dev to get tokens of staker locked before burning that are allowed to burn
