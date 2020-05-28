@@ -11,6 +11,7 @@ const NXMasterNew = contract.fromArtifact('NXMasterMock');
 const NXMToken = contract.fromArtifact('NXMToken');
 const Governance = contract.fromArtifact('Governance');
 const PooledStaking = contract.fromArtifact('PooledStaking');
+const ClaimsReward = contract.fromArtifact('ClaimsReward');
 
 
 const hex = string => '0x' + Buffer.from(string).toString('hex');
@@ -73,6 +74,9 @@ async function submitGovernanceProposal(categoryId, actionHash, members, gv, mem
 
 const directWeb3 = new Web3(process.env.TEST_ENV_FORK);
 
+const masterAddressChangeCategoryId = 27;
+const contractAddressUpgradeCategoryId = 29;
+
 describe('migration', function () {
   const [
     owner,
@@ -111,7 +115,6 @@ describe('migration', function () {
     const masterOwner = await newMaster.owner();
     console.log(`Deployed new master at: ${newMaster.address} with owner: ${masterOwner}`);
 
-    const masterAddressChangeCategoryId = 27;
     const action = 'updateAddressParameters(bytes8,address)';
     const code = hex('MASTADD');
     const proposedValue = newMaster.address;
@@ -136,13 +139,33 @@ describe('migration', function () {
 
     console.log('Setting master address for pooled staking.')
     await ps.changeMasterAddress(newMaster.address);
+
+
+    console.log(`Deploying new ClaimsReward..`)
+
+    const newCR = await ClaimsReward.new({
+      from: firstBoardMember
+    });
+    actionHash = encode(
+      'upgradeContract(bytes2,address)',
+      'CR',
+      newCR.address
+    );
+
+    await submitGovernanceProposal( masterAddressChangeCategoryId, actionHash, boardMembers, gv, '1', firstBoardMember);
+    (await newMaster.getLatestAddress(hex('CR'))).should.be.equal(newCR.address);
+    console.log(`Successfully submitted proposal for ClaimsReward upgrade and passed.`);
+
     console.log('Pooled staking is set up correctly. Initializing and migrating..');
 
     this.master = newMaster;
+    this.cr = newCR;
     this.mr = mr;
     this.gv = gv;
     this.tk = tk;
     this.ps = ps;
+
+
   });
 
   it('migrates all data from old pooled staking system to new one', async function () {
