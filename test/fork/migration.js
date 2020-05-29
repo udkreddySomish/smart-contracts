@@ -124,6 +124,9 @@ describe('migration', function () {
     await submitGovernanceProposal( masterAddressChangeCategoryId, actionHash, boardMembers, gv, '1', firstBoardMember);
     console.log(`Successfully submitted proposal and passed.`);
 
+    const newMasterGovernanceAddress = await gv.nxMasterAddress();
+    assert.equal(newMaster.address, newMasterGovernanceAddress);
+
     console.log(`Deploying pooled staking..`);
     const ps = await PooledStaking.new({
       from: firstBoardMember
