@@ -164,7 +164,7 @@ describe('migration', function () {
     });
     actionHash = encode(
       'upgradeContract(bytes2,address)',
-      'CR',
+      hex('CR'),
       newCR.address
     );
 
