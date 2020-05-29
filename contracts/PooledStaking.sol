@@ -873,10 +873,6 @@ contract PooledStaking is MasterAware {
     MIN_DEALLOCATION = 20 ether;
     MAX_LEVERAGE = 10;
     DEALLOCATE_LOCK_TIME = 90 days;
-    // TODO: To be estimated
-    // BURN_CYCLE_GAS_LIMIT = 0;
-    // DEALLOCATION_CYCLE_GAS_LIMIT = 0;
-    REWARD_CYCLE_GAS_LIMIT = 45000;
 
     migrateStakers();
   }
