@@ -165,7 +165,7 @@ describe('migration', function () {
 
     actionHash = encode(
       'upgradeContract(bytes2,address)',
-      'TF',
+      'BS',
       newTF.address
     );
 
