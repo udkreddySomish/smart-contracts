@@ -127,6 +127,7 @@ describe('migration', function () {
     versionDataWithPooledStaking.push(ps.address);
 
     console.log(`Initializing master with addNewVersion`);
+    console.log(versionDataWithPooledStaking);
     await newMaster.addNewVersion(versionDataWithPooledStaking);
 
     const action = 'updateAddressParameters(bytes8,address)';
