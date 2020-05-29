@@ -122,7 +122,7 @@ describe('migration', function () {
     const masterOwner = await newMaster.owner();
     console.log(`Deployed new master at: ${newMaster.address} with owner: ${masterOwner}`);
 
-    const oldVersionData = oldMaster.getVersionData();
+    const oldVersionData = await oldMaster.getVersionData();
     const versionDataWithPooledStaking = oldVersionData[1];
     versionDataWithPooledStaking.push(ps.address);
 
