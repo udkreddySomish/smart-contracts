@@ -128,7 +128,9 @@ describe('migration', function () {
 
     console.log(`Initializing master with addNewVersion`);
     console.log(versionDataWithPooledStaking);
-    await newMaster.addNewVersion(versionDataWithPooledStaking);
+    await newMaster.addNewVersion(versionDataWithPooledStaking, {
+      from: firstBoardMember
+    });
 
     const action = 'updateAddressParameters(bytes8,address)';
     const code = hex('MASTADD');
