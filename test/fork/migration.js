@@ -153,7 +153,8 @@ describe('migration', function () {
     );
 
     await submitGovernanceProposal( masterAddressChangeCategoryId, actionHash, boardMembers, gv, '1', firstBoardMember);
-    (await newMaster.getLatestAddress(hex('CR'))).should.be.equal(newCR.address);
+    const storedCRAddress = await newMaster.getLatestAddress(hex('CR'));
+    assert.equal(newCR.address, storedCRAddress);
     console.log(`Successfully submitted proposal for ClaimsReward upgrade and passed.`);
 
     console.log('Pooled staking is set up correctly. Initializing and migrating..');
