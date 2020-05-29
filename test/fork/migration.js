@@ -145,8 +145,8 @@ describe('migration', function () {
     assert.equal(newMaster.address, newMasterGovernanceAddress);
 
 
-    // console.log(`Injecting the PooledStaking in the new master...`);
-    // await newMaster.setContractAddress(hex('PS'), ps.address);
+    console.log(`Injecting the PooledStaking in the new master...`);
+    await newMaster.setContractAddress(hex('PS'), ps.address);
 
     const currentPooledStakingAddress = await newMaster.getLatestAddress(hex('PS'));
     assert.equal(currentPooledStakingAddress, ps.address);
