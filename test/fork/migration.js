@@ -159,7 +159,7 @@ describe('migration', function () {
 
 
     console.log(`Deploying new TokenFunctions..`);
-    await newTF = TokenFunctions.new({
+    const newTF = await TokenFunctions.new({
       from: firstBoardMember
     })
 
