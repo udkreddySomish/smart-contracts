@@ -12,6 +12,7 @@ const NXMasterNew = contract.fromArtifact('NXMasterMock');
 const NXMToken = contract.fromArtifact('NXMToken');
 const Governance = contract.fromArtifact('Governance');
 const PooledStaking = contract.fromArtifact('PooledStaking');
+const TokenFunctions = contract.fromArtifact('TokenFunctions');
 const ClaimsReward = contract.fromArtifact('ClaimsReward');
 
 
@@ -157,6 +158,20 @@ describe('migration', function () {
     await ps.changeMasterAddress(newMaster.address);
 
 
+    console.log(`Deploying new TokenFunctions..`);
+    await newTF = TokenFunctions.new({
+      from: firstBoardMember
+    })
+
+    actionHash = encode(
+      'upgradeContract(bytes2,address)',
+      'TF',
+      newTF.address
+    );
+
+    await submitGovernanceProposal(contractAddressUpgradeCategoryId, actionHash, boardMembers, gv, '1', firstBoardMember);
+    const storedTFAddress = await newMaster.getLatestAddress(hex('TF'));
+    assert.equal(storedTFAddress, newTF.address);
     console.log(`Deploying new ClaimsReward..`);
 
     const newCR = await ClaimsReward.new({
