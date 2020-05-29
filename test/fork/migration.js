@@ -7,6 +7,7 @@ const { assert } = require('chai');
 const { encode } = require('./external');
 
 const MemberRoles = contract.fromArtifact('MemberRoles');
+const NXMaster = contract.fromArtifact('NXMaster');
 const NXMasterNew = contract.fromArtifact('NXMasterMock');
 const NXMToken = contract.fromArtifact('NXMToken');
 const Governance = contract.fromArtifact('Governance');
@@ -87,6 +88,7 @@ describe('migration', function () {
     const versionData = versionDataResponse.data;
     const mr = await MemberRoles.at(getContractData('MR', versionData).address);
     const tk = await NXMToken.at(getContractData('NXMTOKEN', versionData).address);
+    const oldMaster = await NXMaster.at(getContractData('NXMASTER', versionData).address);
     let gv = await Governance.at(getContractData('GV', versionData).address);
 
     const directMR = getWeb3Contract('MR', versionData, directWeb3);
@@ -109,11 +111,23 @@ describe('migration', function () {
 
     assert.equal(boardMembers.length, 5);
 
+    console.log(`Deploying pooled staking..`);
+    const ps = await PooledStaking.new({
+      from: firstBoardMember
+    });
+
     const newMaster = await NXMasterNew.new(tk.address, {
       from: firstBoardMember
     });
     const masterOwner = await newMaster.owner();
     console.log(`Deployed new master at: ${newMaster.address} with owner: ${masterOwner}`);
+
+    const oldVersionData = oldMaster.getVersionData();
+    const versionDataWithPooledStaking = oldVersionData[1];
+    versionDataWithPooledStaking.push(ps.address);
+
+    console.log(`Initializing master with addNewVersion`);
+    await newMaster.addNewVersion(versionDataWithPooledStaking);
 
     const action = 'updateAddressParameters(bytes8,address)';
     const code = hex('MASTADD');
@@ -127,24 +141,20 @@ describe('migration', function () {
     const newMasterGovernanceAddress = await gv.nxMasterAddress();
     assert.equal(newMaster.address, newMasterGovernanceAddress);
 
-    console.log(`Deploying pooled staking..`);
-    const ps = await PooledStaking.new({
-      from: firstBoardMember
-    });
 
-    console.log(`Injecting the PooledStaking in the new master...`);
-    await newMaster.setContractAddress(hex('PS'), ps.address);
+    // console.log(`Injecting the PooledStaking in the new master...`);
+    // await newMaster.setContractAddress(hex('PS'), ps.address);
 
     const currentPooledStakingAddress = await newMaster.getLatestAddress(hex('PS'));
     assert.equal(currentPooledStakingAddress, ps.address);
     const pooledStakingIsInternal = await newMaster.isInternal(ps.address);
     assert.equal(pooledStakingIsInternal, true);
 
-    console.log('Setting master address for pooled staking.')
+    console.log('Setting master address for pooled staking.');
     await ps.changeMasterAddress(newMaster.address);
 
 
-    console.log(`Deploying new ClaimsReward..`)
+    console.log(`Deploying new ClaimsReward..`);
 
     const newCR = await ClaimsReward.new({
       from: firstBoardMember
