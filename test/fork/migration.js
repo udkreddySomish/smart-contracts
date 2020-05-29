@@ -170,8 +170,8 @@ describe('migration', function () {
 
     await submitGovernanceProposal(contractAddressUpgradeCategoryId, actionHash, boardMembers, gv, '1', firstBoardMember);
     const storedCRAddress = await newMaster.getLatestAddress(hex('CR'));
-    const storedByOld = await oldMaster.getLatestAddress(hex('CR'));
-    console.log(storedByOld);
+    const postUpgradeVersionData = await newMaster.getVersionData();
+    console.log(postUpgradeVersionData);
     assert.equal(storedCRAddress, newCR.address);
     console.log(`Successfully submitted proposal for ClaimsReward upgrade and passed.`);
 
