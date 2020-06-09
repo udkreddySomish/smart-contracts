@@ -268,21 +268,21 @@ contract Quotation is Iupgradable {
         payable
         checkPause
     {
-        require(coverDetails[3] > now);
-        require(!qd.timestampRepeated(coverDetails[4]));
+        require(coverDetails[3] > now,'1');
+        require(!qd.timestampRepeated(coverDetails[4]),'2');
         qd.setTimestampRepeated(coverDetails[4]);
-        require(!ms.isMember(msg.sender));
-        require(qd.refundEligible(msg.sender) == false);
+        require(!ms.isMember(msg.sender),'3');
+        require(qd.refundEligible(msg.sender) == false,'4');
         uint joinFee = td.joiningFee();
         uint totalFee = joinFee;
         if (coverCurr == "ETH") {
             totalFee = joinFee.add(coverDetails[1]);
         } else {
             IERC20 erc20 = IERC20(pd.getCurrencyAssetAddress(coverCurr));
-            require(erc20.transferFrom(msg.sender, address(this), coverDetails[1]));
+            require(erc20.transferFrom(msg.sender, address(this), coverDetails[1]),'5');
         }
-        require(msg.value == totalFee);
-        require(verifySign(coverDetails, coverPeriod, coverCurr, smartCAdd, _v, _r, _s));
+        require(msg.value == totalFee,'6');
+        require(verifySign(coverDetails, coverPeriod, coverCurr, smartCAdd, _v, _r, _s),'7');
         qd.addHoldCover(msg.sender, smartCAdd, coverCurr, coverDetails, coverPeriod);
         qd.setRefundEligible(msg.sender, true);
     }
